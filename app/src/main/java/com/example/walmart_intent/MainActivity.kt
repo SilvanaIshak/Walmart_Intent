@@ -1,37 +1,29 @@
 package com.example.walmart_intent
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.text.Html
-import android.text.Spanned
-import android.text.method.LinkMovementMethod
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
 
     val userarray = ArrayList<User>()
 
+    @SuppressLint("QueryPermissionsNeeded")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-//        var userarray = arrayListOf<User>(User("Vana", "123", "Vana", "Ishak"),
-//            User("Sara", "123", "Sara", "Sami"),
-//            User("Andy", "123", "Andy", "Ishak"),
-//            User("Eddie", "123", "Eddie", "Ishak"))
-
-
-        userarray.add(User("Vana", "123", "Vana", "Ishak"))
+        userarray.add(User("Vana", "1234", "Vana", "Ishak"))
         userarray.add(User("Sara", "123", "Sara", "Sami"))
         userarray.add(User("Andy", "123", "Andy", "Ishak"))
         userarray.add(User("Eddie", "123", "Eddie", "Ishak"))
         userarray.add(User("user1", "123", "user1", "user1"))
 
-//        val user = intent.getSerializableExtra("User") as User
         btnCreate.setOnClickListener {
             Intent(this, CreateAccount::class.java).also {
                 startActivity(it)
@@ -40,10 +32,22 @@ class MainActivity : AppCompatActivity() {
 
         val txtPassForgot : TextView = findViewById(R.id.txtForgot)
         txtPassForgot.setOnClickListener {
-            val openURL = Intent(android.content.Intent.ACTION_VIEW)
-            openURL.data = Uri.parse("http://www.walmart.com/account/forgotpassword")
-            startActivity(openURL)
+            if (txtEmail.text.toString().isNotEmpty()) {
+                var intent = Intent(Intent.ACTION_SENDTO)
+                intent.data = Uri.parse("mailto:") // only email apps should handle this
+                var sendto = arrayOf(txtEmail.text.toString() + "@gmail.com")
+                intent.putExtra(Intent.EXTRA_EMAIL, sendto);
+                intent.putExtra(Intent.EXTRA_SUBJECT, "Password Request");
+                intent.putExtra(Intent.EXTRA_TEXT, "Your password is: ${userarray.find { it.username == txtEmail.text.toString() }?.password}");
+                if (intent.resolveActivity(packageManager) != null) {
+                    startActivity(intent);
+                }
+            }
+            else {
+                Toast.makeText(this, "Please enter your email address", Toast.LENGTH_LONG).show()
+            }
         }
+
 
         btnSignIn.setOnClickListener {
             var email= txtEmail.text.toString()
@@ -66,15 +70,10 @@ class MainActivity : AppCompatActivity() {
             newPage.putExtra("flname", "Welcome ${loggedInUser.firstName} ${loggedInUser.lastName}")
             startActivity(newPage)
         }
-
-
-
-
     }
 
     override fun onResume() {
         super.onResume()
-
         val rintent = intent.getSerializableExtra("regUser") as User?
         if (rintent != null) {
             userarray.add(rintent)
